@@ -29,7 +29,7 @@ const App = () => {
       setDecision(
         windspeed < 10 && 
         feelsLikeEve > 14 && 
-        !weatherDesc.toLowerCase().includes("moderate rain") || rainfall < 2.5
+        !weatherDesc.toLowerCase().includes("rain") || rainfall < 2.5
         ? "Yes!" 
         : "No..."
       );
@@ -37,8 +37,10 @@ const App = () => {
         (windspeed < 10 ? "It's not too windy, " : "It's going to be windy, ") +
         (feelsLikeEve > 14 ? "it's warm, " : "it's cold, ") +
         (weatherDesc.toLowerCase().includes("clear") ? "sunny, " : "") +
-        (weatherDesc.toLowerCase().includes("moderate rain") ? "but it's going to rain " : "and it's not set to rain ") +
-        (rainfall == 0 ? "at all." : rainfall > 1 ? "a bit." : "much.")
+        (weatherDesc.toLowerCase().includes("rain") ? 
+            (rainfall == 0 ? "and it's not set to rain at all." : 
+                (rainfall > 0.1 && rainfall < 2.5 ? "although it's going to rain a little." : "but it's going to rain.")) 
+: "and it's not set to rain.")
       );
       setLoading(false);
     }
