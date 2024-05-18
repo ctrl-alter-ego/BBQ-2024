@@ -40,12 +40,9 @@ const App = () => {
         (weatherDesc.toLowerCase().includes("moderate rain") ? "but it's going to rain " : "and it's not set to rain ") +
         (rainfall == 0 ? "at all." : rainfall > 1 ? "a bit." : "much.")
       );
-      console.log(weatherDesc);
       setLoading(false);
     }
   }, [weather]);
-
-  console.log(weather)
 
   const handleInputChange = (event) => {
     setInputLocation(event.target.value);
