@@ -11,6 +11,7 @@ const App = () => {
   const [error, setError] = useState(null);
   const [geoPermission, setGeoPermission] = useState(null);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   
   const part = "current,minutely,hourly"
   const units = "metric"
@@ -175,7 +176,8 @@ const handleFindMeAdr = (event) => {
             <p>
               <a 
                 data-explainer 
-                className="explainer-text" 
+                className={`explainer-text ${isOpen ? 'show' : ''}`}
+                onClick={() => setIsOpen(!isOpen)}
                 data-toggle="collapse" 
                 href="#collapsePanel" 
                 role="button" 
@@ -187,42 +189,42 @@ const handleFindMeAdr = (event) => {
             </p>
           </div>
 
-          <div className="table todays-weather collapse show" id="collapsePanel">
+          <div className={`table todays-weather collapse ${isOpen ? 'show' : ''}`} id="collapsePanel">
             <p>{reason}</p>
             <table>
               <thead></thead>
               <tbody>
                 <tr data-template>
                   <th scope="row">🌬️ Wind speed</th>
-                  <td>{weather.daily[0].wind_speed}</td>
+                  <td>{weather.daily[0].wind_speed.toFixed(1)}</td>
                   <td>
                     <span data-wind-today></span>mph
                   </td>
                 </tr>
                 <tr data-template>
                   <th scope="row">🌡️ Temperature</th>
-                  <td>{weather.daily[0].temp.day}</td>
+                  <td>{weather.daily[0].temp.day.toFixed(1)}</td>
                   <td>
                     <span data-temp-today></span>&deg;C
                   </td>
                 </tr>
                 <tr data-template>
                   <th scope="row">🌧️ Rainfall</th>
-                  <td>{weather.daily[0].rain ?? 0}</td>
+                  <td>{weather.daily[0].rain ? weather.daily[0].rain.toFixed(1) : 0}</td>
                   <td>
                     <span data-rain-today></span>mm
                   </td>
                 </tr>
                 <tr data-template>
                   <th scope="row">🏙️ Feels like today</th>
-                  <td>{weather.daily[0].feels_like.day}</td>
+                  <td>{weather.daily[0].feels_like.day.toFixed(1)}</td>
                   <td>
                     <span data-feels-day-today></span>&deg;C
                   </td>
                 </tr>
                 <tr data-template>
                   <th scope="row">🌆 Feels like this evening</th>
-                  <td>{weather.daily[0].feels_like.eve}</td>
+                  <td>{weather.daily[0].feels_like.eve.toFixed(1)}</td>
                   <td>
                     <span data-feels-eve-today></span>&deg;C
                   </td>
@@ -260,7 +262,7 @@ const handleFindMeAdr = (event) => {
 
         <div className="footer">
           {geoPermission === 'denied' && (
-            <a href="#" onClick={setShowTooltip} >I've changed my mind, grant location permissions!</a>
+            <a href="#" onClick={setShowTooltip}>I've changed my mind, grant location permissions!</a>
           )}
         </div>
       </div> {/* end container */}
