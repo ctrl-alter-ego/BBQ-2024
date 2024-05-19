@@ -29,7 +29,7 @@ const App = () => {
       setDecision(
         windspeed < 10 && 
         feelsLikeEve > 14 && 
-        !weatherDesc.toLowerCase().includes("rain") || rainfall < 2.5
+        (!weatherDesc.toLowerCase().includes("rain") || rainfall < 2.5)
         ? "Yes!" 
         : "No..."
       );
