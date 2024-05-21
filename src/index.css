@@ -132,6 +132,10 @@ button:focus-visible {
   background-color: #ffffb1;
 }
 
+.alert p {
+  margin: 0;
+}
+
 /* text styles */
 h1 {
   font-family: 'Bebas Neue', 'Open Sans', sans-serif;
@@ -187,7 +191,7 @@ h2.loading {
 }
 
 .table.show {
-  max-height: 400px;
+  max-height: 450px;
   opacity: 1;
 }
 

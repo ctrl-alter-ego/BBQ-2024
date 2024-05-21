@@ -12,20 +12,39 @@ const App = () => {
   const [geoPermission, setGeoPermission] = useState(null);
   const [showTooltip, setShowTooltip] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
+  const [suggested, setSuggested] = useState(null);
   
   const part = "current,minutely,hourly"
   const units = "metric"
   const gmapsApiKey = import.meta.env.VITE_GMAPS_API_KEY;
   const owApiKey = import.meta.env.VITE_OW_API_KEY;
 
+  // let dayWeather = weather.daily[0] ?? null;
+  let dayWeather = null;
   let windspeed, feelsLikeEve, weatherDesc, rainfall;
 
   useEffect(() => {
     if (weather) {
-      windspeed = weather.daily[0].wind_speed;
-      feelsLikeEve = weather.daily[0].feels_like.eve;
-      weatherDesc = weather.daily[0].weather[0].description;
-      rainfall = weather.daily[0].rain ?? 0;
+      console.log(weather)
+
+      if (suggested) {
+        const suggestedDayIndex = suggestBetterDay();
+        dayWeather = weather.daily[suggestedDayIndex];
+        console.log(dayWeather)
+      } else {
+        dayWeather = weather.daily[0];
+        console.log("suggested", suggested, "dw: ", dayWeather)
+      }
+    //   let dayWeather = weather.daily[0];
+
+    //   if (suggested) {
+    //     dayWeather = suggestBetterDay();
+    //   }
+
+      windspeed = dayWeather.wind_speed;
+      feelsLikeEve = dayWeather.feels_like.eve;
+      weatherDesc = dayWeather.weather[0].description;
+      rainfall = dayWeather.rain ?? 0;
 
       setDecision(
         windspeed < 10 && 
@@ -41,7 +60,7 @@ const App = () => {
         (weatherDesc.toLowerCase().includes("rain") ? 
             (rainfall == 0 ? "and it's not set to rain at all." : 
                 (rainfall > 0.1 && rainfall < 2.5 ? "although it's going to rain a little." : "but it's going to rain.")) 
-: "and it's not set to rain.")
+  : "and it's not set to rain.")
       );
       setLoading(false);
     }
@@ -91,47 +110,47 @@ const App = () => {
     }
 };
 
-const handleFindMeAdr = (event) => {
-  event.preventDefault();
-  setLoading(true);
-  setError(null);
+  const handleFindMeAdr = (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
 
-  if (inputLocation) { // from user input
-    fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(inputLocation)}&key=${gmapsApiKey}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error("Can't get weather data at the moment. Please try again.");
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.results[0]) {
-          const geometryLocation = data.results[0].geometry.location;
-          setAddress(data.results[0].formatted_address);
-          return fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${geometryLocation.lat}&lon=${geometryLocation.lng}&exclude=${part}&units=${units}&appid=${owApiKey}`);
-        } else {
-          throw new Error("Can't find the location you entered. Please try again.");
-        }
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error("Can't get weather data at the moment. Please try again.");
-        }
-        return response.json();
-      })
-      .then(data => {
-        setWeather(data);
-        setLoading(false);
-      })
-      .catch(error => {
-        setError(error.message);
-        setLoading(false);
-      });
-  } else {
-    setError("Please enter a location");
-    setLoading(false);
-  }
-};
+    if (inputLocation) { // from user input
+      fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(inputLocation)}&key=${gmapsApiKey}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Can't get weather data at the moment. Please try again.");
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.results[0]) {
+            const geometryLocation = data.results[0].geometry.location;
+            setAddress(data.results[0].formatted_address);
+            return fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${geometryLocation.lat}&lon=${geometryLocation.lng}&exclude=${part}&units=${units}&appid=${owApiKey}`);
+          } else {
+            throw new Error("Can't find the location you entered. Please try again.");
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Can't get weather data at the moment. Please try again.");
+          }
+          return response.json();
+        })
+        .then(data => {
+          setWeather(data);
+          setLoading(false);
+        })
+        .catch(error => {
+          setError(error.message);
+          setLoading(false);
+        });
+    } else {
+      setError("Please enter a location");
+      setLoading(false);
+    }
+  };
 
   const convertLocToAdr = (lat, lon) => {
     fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${gmapsApiKey}`)
@@ -149,6 +168,47 @@ const handleFindMeAdr = (event) => {
     });
   };
 
+  const suggestBetterDay = () => {
+    setLoading(true);
+    const days = weather.daily.slice(1, 8);
+    // let suggestedDayIndex = null;
+    // days.forEach((day, index) => {
+    const suggestedDayIndex = days.findIndex(day => {
+      const windspeed = day.wind_speed;
+      const feelsLikeEve = day.feels_like.eve;
+      const weatherDesc = day.weather[0].description;
+      const rainfall = day.rain || 0;
+
+      return (
+        windspeed < 10 &&
+        feelsLikeEve > 14 &&
+        (!weatherDesc.toLowerCase().includes("rain") || rainfall < 2.5)
+      );
+    });
+
+    if (suggestedDayIndex !== -1) {
+      const suggestedDay = weather.daily[suggestedDayIndex];
+      const date = new Date(suggestedDay.dt * 1000);
+      const dayOfWeek = date.toLocaleString('default', { weekday: 'long' });
+      const formattedDate = date.toLocaleString('default', { month: 'long', day: 'numeric' });
+      const weatherDesc = suggestedDay.weather[0].description;
+
+      setSuggested({
+        dayOfWeek: dayOfWeek,
+        formattedDate: formattedDate,
+        weatherSummary: `The next best day for a BBQ is ${dayOfWeek}, ${formattedDate}. The weather will be: ${weatherDesc}.`
+     });
+     setWeather(weather);
+     setLoading(false);
+     return suggestedDayIndex;
+
+    } else {
+      setSuggested("Unfortunately, there are no good days for a BBQ in the next week.");
+      setLoading(false);
+      return 0;
+    }
+  };
+  
   return (
     <>
     <div id="container">
@@ -191,6 +251,10 @@ const handleFindMeAdr = (event) => {
 
           <div className={`table todays-weather collapse ${isOpen ? 'show' : ''}`} id="collapsePanel">
             <p>{reason}</p>
+            {decision === "No..." && (
+              <p><a href="#" onClick={suggestBetterDay}>Suggest a better day?</a></p>
+            )}
+            {suggested && (<p>{suggested.weatherSummary}</p>)}
             <table>
               <thead></thead>
               <tbody>
@@ -232,12 +296,18 @@ const handleFindMeAdr = (event) => {
               </tbody>
               <tfoot></tfoot>
             </table>
-            <span>Showing weather for {address ?? weather.timezone}</span>
-            {weather.alerts && (weather.alerts.length > 0) && (weather.alerts[0].start === weather.daily[0].dt) && (
+            <span>Showing weather for {address ?? weather.timezone}{suggested ? ` on ${suggested.dayOfWeek}, ${suggested.formattedDate}` : " for today"}</span>
+            {weather.alerts && (weather.alerts.length > 0) && (weather.alerts[0].start === weather.dt) && (
               <div className="alert">
                 <p>⚠️ Be advised: {weather.alerts[0].event}</p>
-                <a target="_blank" href="https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings">More info</a>
-                <img src="src/assets/new-tab.png" alt="new tab" width={14} height={14} className="newTab" />
+                {weather.timezone == "Europe/London" ? (
+                  <>
+                  <a target="_blank" href="https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings">More info</a>
+                  </>
+                ) : (
+                  <a target="_blank" href={`https://www.google.com/search?q=${weather.alerts[0].sender_name}`}>More info</a>
+                )}
+                  <img src="src/assets/new-tab.png" alt="new tab" width={14} height={14} className="newTab" />
               </div>
             )}
           </div>
