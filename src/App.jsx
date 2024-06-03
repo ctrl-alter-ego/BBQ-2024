@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
 const App = () => {
+  const [backgroundImage, setBackgroundImage] = useState('/src/assets/bbq-icon.png');
+  const [units, setUnits] = useState("metric");
   const [location, setLocation] = useState(null);
   const [weather, setWeather] = useState(null);
   const [inputLocation, setInputLocation] = useState("");
@@ -16,20 +18,22 @@ const App = () => {
   const [dayIndex, setDayIndex] = useState(0);
   
   const part = "current,minutely,hourly"
-  const units = "metric"
+  // const units = "metric"
   const gmapsApiKey = import.meta.env.VITE_GMAPS_API_KEY;
   const owApiKey = import.meta.env.VITE_OW_API_KEY;
 
   let dayWeather = null;
-  let windspeed, feelsLikeEve, weatherDesc, rainfall;
+  let windspeed, feelsLikeEve, weatherDesc, rainfall, icon;
 
   useEffect(() => {
+    console.log(weather);
     if (weather) {
       dayWeather = weather.daily[dayIndex];
       windspeed = dayWeather.wind_speed;
       feelsLikeEve = dayWeather.feels_like.eve;
       weatherDesc = dayWeather.weather[0].description;
       rainfall = dayWeather.rain ?? 0;
+      icon = dayWeather.weather[0].icon;
 
       setDecision(
         windspeed < 10 && 
@@ -70,9 +74,23 @@ const App = () => {
       }
 
       setReason(reason);
+      icon && setBackgroundImage(`https://openweathermap.org/img/wn/${icon}@2x.png`);
       setLoading(false);
     }
   }, [weather]);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = backgroundImage;
+    img.onload = () => {
+      document.documentElement.style.setProperty('--background-url', `url(${img.src})`);
+      document.documentElement.style.setProperty('--background-opacity', img.src.includes('bbq') ? '0.04' : '0.1');
+    };
+  }, [backgroundImage]);
+
+  const handleUnits = () => {
+    setUnits(units === "metric" ? "imperial" : "metric");
+  };
 
   const handleInputChange = (event) => {
     setInputLocation(event.target.value);
@@ -208,19 +226,20 @@ const App = () => {
                   setSuggested({
                     dayOfWeek: dayOfWeek,
                     formattedDate: formattedDate,
-                    weatherSummary: `The next best day for a BBQ is ${dayOfWeek}, ${formattedDate}. The weather will be: ${weatherDesc}.`
-                 });
+                    weatherDesc: weatherDesc,
+                    // weatherSummary: `The next best day for a BBQ is ${dayOfWeek}, ${formattedDate}. The weather will be: ${weatherDesc}.`
+                  });
 
-                 setLoading(false);
-                 return suggestedDayIndex;
+                  setLoading(false);
+                  return suggestedDayIndex;
 
                 } else {
-                  setSuggested({weatherSummary: "Unfortunately, there are no good days for a BBQ in the next week."});
+                  setSuggested(0);
                   setLoading(false);
                   return 0;
                 }
               };
-              
+
               return (
                 <>
                 <div id="container">
@@ -266,7 +285,17 @@ const App = () => {
                         {!suggested && decision === "No..." && (
                           <p><a href="#" onClick={suggestBetterDay}>Suggest a better day?</a></p>
                         )}
-                        {suggested && (<p>{suggested.weatherSummary}</p>)}
+
+                        {suggested && (
+                          dayIndex !== 0 ? (
+                            <>
+                            <p>---</p>
+                            <p>The next best day for a BBQ is <strong>{suggested.dayOfWeek}, {suggested.formattedDate}</strong>. The weather will be: {suggested.weatherDesc}.</p>
+                            </>
+                          ) : (
+                            <p>Unfortunately, there are no good days for a BBQ in the next week.</p>
+                          )
+                        )}
                         <table>
                           <thead></thead>
                           <tbody>
@@ -328,7 +357,7 @@ const App = () => {
 
                     {!loading && !location && (geoPermission !== 'granted') && (          
                       <div className="findme">
-                        <button type="button" onClick={handleFindMeGeo}>Find Me</button>
+                        <button className="btn-grad" type="button" onClick={handleFindMeGeo}>Find Me</button>
                       </div>
                     )}
 
@@ -337,7 +366,7 @@ const App = () => {
                         <label>{location && geoPermission === 'granted' ? "Check somewhere else?" : "Or enter a location: "}
                           <input type="text" id="location" value={inputLocation} onChange={handleInputChange} placeholder="Enter a town or city" />
                         </label>
-                        <button type="submit">Search</button>
+                        <button className="btn-grad" type="submit">Search</button>
                         {error && <p>{error}</p>}
                       </form>
                     </div>
