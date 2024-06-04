@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import bbqIcon from '/src/assets/bbq-icon.png';
 import Switch from './Switch.jsx';
 
 const App = () => {
-  const [backgroundImage, setBackgroundImage] = useState('/src/assets/bbq-icon.png');
+  const [backgroundImage, setBackgroundImage] = useState(bbqIcon);
   const [units, setUnits] = useState("metric");
   const [location, setLocation] = useState(null);
   const [weather, setWeather] = useState(null);
