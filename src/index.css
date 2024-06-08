@@ -50,12 +50,10 @@ body {
   min-width: 320px;
   min-height: 100vh;
   justify-content: center;
-  /* z-index: 1; */
 }
 
 *::selection {
   background-color: #fa8c05;
-  /* color: #fff; */
 }
 
 #container {
@@ -227,6 +225,10 @@ h2.loading {
   opacity: 1;
 }
 
+.table td, .table th {
+  border-top: none;
+}
+
 .table th {
   font-weight: 600;
   text-align: left;
@@ -243,7 +245,6 @@ h2.loading {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  margin: 10px -170px;
 }
 
 .toggle .label {

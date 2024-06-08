@@ -27,7 +27,6 @@ const App = () => {
   let windspeed, feelsLikeEve, weatherDesc, rainfall, icon;
 
   useEffect(() => {
-    console.log(weather);
     if (weather) {
       dayWeather = weather.daily[dayIndex];
       windspeed = dayWeather.wind_speed;
@@ -44,41 +43,35 @@ const App = () => {
         : "No..."
       );
       
-      let reason = '';
+      let reasons = [];
 
-      if (windspeed < 10) {
-        reason += "It's not too windy, ";
+      if (decision === "Yes!") {
+        reasons.push(`It's going to be warm enough at ${feelsLikeEve.toFixed(0)} ${units === "metric" ? "\u00B0C" : "\u00B0F"}, there's low wind and it's not going to rain.`);
+        setReason(reasons);
+
       } else {
-        reason += "It's going to be windy, ";
-      }
-
-      if (feelsLikeEve > 14) {
-        reason += "it's warm, ";
-      } else {
-        reason += "it's cold, ";
-      }
-
-      if (weatherDesc.toLowerCase().includes("clear")) {
-        reason += "sunny, ";
-      }
-
-      if (weatherDesc.toLowerCase().includes("rain")) {
-        if (rainfall == 0) {
-          reason += "and it's not set to rain at all.";
-        } else if (rainfall > 0.1 && rainfall < 2.5) {
-          reason += "although it's going to rain a little.";
-        } else {
-          reason += "but it's going to rain.";
+        if (windspeed >= 10) {
+          reasons.push(`at ${windspeed} mph, it's too windy`);
         }
-      } else {
-        reason += "and it's not set to rain.";
+
+        if (feelsLikeEve <= 15) {
+          reasons.push(`at only ${feelsLikeEve.toFixed(0)} ${units === "metric" ? "\u00B0C" : "\u00B0F"} later, it's not warm enough`);    
+        }
+
+        if (weatherDesc.toLowerCase().includes("rain")) {
+          if (rainfall > 0.1 && rainfall < 2.5) {
+            reasons.push(`it's going to rain a little ${weatherDesc.includes("rain") && `(forecast says ${weatherDesc})`}`);
+          } else if (rainfall >= 2.5) {
+            reasons.push(`it's going to rain a lot ${weatherDesc.includes("rain") && `(forecast says ${weatherDesc})`}`);
+          }
+        }
+        setReason(capitalizeSentences(reasons.join(", plus ") + "."));
       }
 
-      setReason(reason);
       icon && setBackgroundImage(`https://openweathermap.org/img/wn/${icon}@2x.png`);
       setLoading(false);
     }
-  }, [weather]);
+  }, [weather, decision]);
 
   useEffect(() => {
     const img = new Image();
@@ -88,6 +81,12 @@ const App = () => {
       document.documentElement.style.setProperty('--background-opacity', img.src.includes('bbq') ? '0.04' : '0.1');
     };
   }, [backgroundImage]);
+
+  function capitalizeSentences(str) {
+    return str.replace(/(^|\. *)(.)/g, function(match) {
+      return match.toUpperCase();
+    });
+  }
 
   const handleUnits = () => {
     setUnits(units === "metric" ? "imperial" : "metric");
@@ -218,10 +217,6 @@ const App = () => {
       );
     });
 
-    // const adjustedDayIndex = suggestedDayIndex !== -1 ? suggestedDayIndex + 1 : -1;
-
-    console.log(suggestedDayIndex, days, windspeed, feelsLikeEve, weatherDesc, rainfall)
-
     if (suggestedDayIndex !== -1) {
       setDayIndex(suggestedDayIndex);
       const date = new Date(weather.daily[suggestedDayIndex].dt * 1000);
@@ -233,7 +228,6 @@ const App = () => {
         dayOfWeek: dayOfWeek,
         formattedDate: formattedDate,
         weatherDesc: weatherDesc,
-        // weatherSummary: `The next best day for a BBQ is ${dayOfWeek}, ${formattedDate}. The weather will be: ${weatherDesc}.`
       });
 
       setLoading(false);
@@ -304,7 +298,7 @@ const App = () => {
                         ? ` tomorrow (${suggested.dayOfWeek}, ${suggested.formattedDate})`
                         : ` ${suggested.dayOfWeek}, ${suggested.formattedDate}`
                       }
-                    </strong>. The weather will be: {suggested.weatherDesc}.
+                    </strong>. The forecast says {suggested.weatherDesc}.
                   </p>
                 </>
               ) : (
@@ -321,8 +315,8 @@ const App = () => {
                         <Switch
                           isOn={units === "metric" ? true : false}
                           handleToggle={() => handleUnits()}
-                          labelLeft="Farenheit"
-                          labelRight="Celsius"
+                          labelLeft="&deg;F"
+                          labelRight="&deg;C"
                         />
                       </span>
                     )}
@@ -339,8 +333,7 @@ const App = () => {
                   <th scope="row">🌡️ Temperature</th>
                   <td>{weather.daily[dayIndex].temp.day.toFixed(1)}</td>
                   <td>
-                    {/* <span data-temp-today></span> */}
-                    <span dangerouslySetInnerHTML={{ __html: units === "metric" ? `&deg;C` : `&deg;F` }} />                  
+                    <span data-temp-today dangerouslySetInnerHTML={{ __html: units === "metric" ? `&deg;C` : `&deg;F` }} />                  
                   </td>
                 </tr>
                 <tr data-template>
@@ -354,14 +347,14 @@ const App = () => {
                   <th scope="row">🏙️ Feels like {dayIndex === 0 ? `today` : 'during the day'}</th>
                   <td>{weather.daily[dayIndex].feels_like.day.toFixed(1)}</td>
                   <td>
-                    <span data-feels-day-today></span>&deg;C
+                    <span data-feels-day-today dangerouslySetInnerHTML={{ __html: units === "metric" ? `&deg;C` : `&deg;F` }}></span>
                   </td>
                 </tr>
                 <tr data-template>
                   <th scope="row">🌆 Feels like {dayIndex === 0 ? `this evening` : 'during the evening'}</th>
                   <td>{weather.daily[dayIndex].feels_like.eve.toFixed(1)}</td>
                   <td>
-                    <span data-feels-eve-today></span>&deg;C
+                    <span data-feels-eve-today dangerouslySetInnerHTML={{ __html: units === "metric" ? `&deg;C` : `&deg;F` }}></span>
                   </td>
                 </tr>
               </tbody>
