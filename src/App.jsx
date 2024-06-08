@@ -51,7 +51,7 @@ const App = () => {
 
       } else {
         if (windspeed >= 10) {
-          reasons.push(`at ${windspeed} mph, it's too windy`);
+          reasons.push(`at ${windspeed.toFixed(0)} mph, it's too windy`);
         }
 
         if (feelsLikeEve <= 15) {
