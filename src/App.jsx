@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import bbqIcon from '/src/assets/bbq-icon.png';
+import arrowIcon from '/src/assets/arrow2b.svg';
 import Switch from './Switch.jsx';
 
 const App = () => {
+  const [screenSize, setScreenSize] = useState({width: window.innerWidth, height: window.innerHeight});
   const [backgroundImage, setBackgroundImage] = useState(bbqIcon);
   const [units, setUnits] = useState("metric");
   const [location, setLocation] = useState(null);
@@ -25,6 +27,21 @@ const App = () => {
 
   let dayWeather = null;
   let windspeed, feelsLikeEve, weatherDesc, rainfall, icon;
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [screenSize]);
 
   useEffect(() => {
     if (weather) {
@@ -245,8 +262,14 @@ const App = () => {
     <div id="container">
       {showTooltip && (
         <div id="popover">
-          <img src='src/assets/arrow2.svg' alt='arrow' />
-          <p>Sure! Click this button, and choose <strong>Reset permission</strong>.</p>
+          {screenSize.width > 768 && (
+            <img src={arrowIcon} alt='arrow' />
+          )}
+          {screenSize.width < 768 ? (
+            <p>Sure! Go to your browser settings and <strong>Reset location permissions</strong>.</p>
+          ) : (
+            <p>Sure! Click this button, and choose Location &gt; <strong>Reset permission</strong>.</p>
+          )}
         </div>
       )}
       <h1 className="main-title">Should I have a BBQ today?</h1>
