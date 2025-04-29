@@ -126,7 +126,7 @@ const App = () => {
           lat: position.coords.latitude,
           lon: position.coords.longitude,
         });
-        fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${position.coords.latitude}&lon=${position.coords.longitude}&exclude=${part}&units=${units}&appid=${owApiKey}`)
+        fetch(`https://api.openweathermap.org/data/3.0/onecall?lat=${position.coords.latitude}&lon=${position.coords.longitude}&exclude=${part}&units=${units}&appid=${owApiKey}`)
         .then(response => {
             if (!response.ok) {
               throw new Error("Can't get location data at the moment. Please try again.");
